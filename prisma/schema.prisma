@@ -1,0 +1,260 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String     @id @default(auto()) @map("_id") @db.ObjectId
+  email     String     @unique
+  name      String?
+  password  String?
+  role      Role       @default(AGENT)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  agent     Agent?
+  auditLogs AuditLog[]
+  alerts    Alert[]
+}
+
+model Agent {
+  id             String       @id @default(auto()) @map("_id") @db.ObjectId
+  userId         String       @unique @db.ObjectId
+  user           User         @relation(fields: [userId], references: [id])
+  name           String
+  email          String       @unique
+  phone          String?
+  location       String?
+  cases          Int          @default(0)
+  status         AgentStatus  @default(OFFLINE)
+  joinedDate     DateTime     @default(now())
+  successRate    Float        @default(0.0)
+  totalRecovered Float        @default(0.0)
+  assignedCases  Assignment[]
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+model Borrower {
+  id                String            @id @default(auto()) @map("_id") @db.ObjectId
+  name              String
+  phone             String?
+  email             String?
+  address           String?
+  location          String?
+  loanId            String?
+  loanType          String?
+  amount            Float             @default(0.0)
+  amountNumeric     Float             @default(0.0)
+  overdue           String?
+  overdueDays       Int               @default(0)
+  risk              String? // high, medium, low, critical
+  verified          Boolean           @default(false)
+  status            BorrowerStatus    @default(ACTIVE)
+  lastContact       DateTime?
+  notes             String?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  verifications     Verification[]
+  skipTraceResults  SkipTraceResult[]
+  recoveryActions   RecoveryAction[]
+  assignments       Assignment[]
+  auditLogs         AuditLog[]
+  locations         Location[]
+}
+
+model Verification {
+  id          String             @id @default(auto()) @map("_id") @db.ObjectId
+  borrowerId  String             @db.ObjectId
+  borrower    Borrower           @relation(fields: [borrowerId], references: [id])
+  type        VerificationType
+  provider    String?
+  status      VerificationStatus @default(PENDING)
+  result      Json?
+  requestedBy String?
+  verifiedBy  String?
+  priority    String? // High, Urgent, etc.
+  requestedAt DateTime           @default(now())
+  completedAt DateTime?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+}
+
+model SkipTraceResult {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  borrowerId String   @db.ObjectId
+  borrower   Borrower @relation(fields: [borrowerId], references: [id])
+  geojson    Json?
+  score      Float?
+  provider   String?
+  createdAt  DateTime @default(now())
+}
+
+model Location {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  borrowerId  String   @db.ObjectId
+  borrower    Borrower @relation(fields: [borrowerId], references: [id])
+  latitude    Float
+  longitude   Float
+  address     String?
+  lastSeen    DateTime?
+  confidence  String? // High, Medium, Low
+  source      String? // Mobile Signal, Social Media
+  createdAt   DateTime @default(now())
+}
+
+model Assignment {
+  id           String           @id @default(auto()) @map("_id") @db.ObjectId
+  borrowerId   String           @db.ObjectId
+  borrower     Borrower         @relation(fields: [borrowerId], references: [id])
+  agentId      String           @db.ObjectId
+  agent        Agent            @relation(fields: [agentId], references: [id])
+  loanId       String?
+  amount       String?
+  assignedAt   DateTime         @default(now())
+  dueDate      DateTime?
+  status       AssignmentStatus @default(OPEN)
+  priority     String? // High, Medium, Low
+  progress     Int              @default(0)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+}
+
+model Alert {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String?  @db.ObjectId
+  user        User?    @relation(fields: [userId], references: [id])
+  title       String
+  description String
+  type        String // danger, info, etc.
+  action      String?
+  timestamp   DateTime @default(now())
+  read        Boolean  @default(false)
+  createdAt   DateTime @default(now())
+}
+
+model RecoveryAction {
+  id         String               @id @default(auto()) @map("_id") @db.ObjectId
+  borrowerId String               @db.ObjectId
+  borrower   Borrower             @relation(fields: [borrowerId], references: [id])
+  type       RecoveryActionType
+  payload    Json?
+  status     RecoveryActionStatus @default(PENDING)
+  executedBy String?
+  executedAt DateTime?
+  createdAt  DateTime             @default(now())
+}
+
+model AuditLog {
+  id         String    @id @default(auto()) @map("_id") @db.ObjectId
+  actorId    String?   @db.ObjectId
+  user       User?     @relation(fields: [actorId], references: [id])
+  borrowerId String?   @db.ObjectId
+  borrower   Borrower? @relation(fields: [borrowerId], references: [id])
+  action     String
+  module     String? // Borrowers, Reports, etc.
+  details    String?
+  status     String? // Success, Failed
+  timestamp  DateTime  @default(now())
+  createdAt  DateTime  @default(now())
+}
+
+model DashboardStats {
+  id                   String   @id @default(auto()) @map("_id") @db.ObjectId
+  totalBorrowers       Int      @default(0)
+  verified             Int      @default(0)
+  inRecovery           Int      @default(0)
+  activeAgents         Int      @default(0)
+  pendingVerifications Int      @default(0)
+  slaAlerts            Int      @default(0)
+  totalRecovered       String?
+  recoveryRate         Float    @default(0.0)
+  updatedAt            DateTime @updatedAt
+}
+
+model RecoveryTrend {
+  id        String @id @default(auto()) @map("_id") @db.ObjectId
+  month     String
+  recovered Int
+  target    Int
+  year      Int    @default(2025)
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  AGENT
+}
+
+enum AgentStatus {
+  ONLINE
+  OFFLINE
+  ON_BREAK
+  BUSY
+}
+
+// enum BorrowerStatus {
+//   ACTIVE
+//   CLOSED
+//   DEFAULTED
+//   IN_RECOVERY
+//   LEGAL
+//   SKIPPEd
+// }
+
+enum BorrowerStatus {
+  ACTIVE         // Borrower is active and being tracked
+  INACTIVE       // Borrower is inactive or closed
+  SKIPPED        // Borrower is difficult to trace (skip trace)
+  VERIFIED       // Borrower identity is verified
+  HIGH_RISK      // High risk borrower
+  CRITICAL       // Very risky, critical attention needed
+  CLOSED         // Case closed, no action needed
+}
+
+enum VerificationType {
+  PAN
+  AADHAAR
+  BANK
+  DL
+  RC
+  VOTER
+  PASSPORT
+  ADDRESS
+  PHONE
+  EMAIL
+  LIVENESS
+  EMPLOYMENT
+}
+
+enum VerificationStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  VERIFIED
+}
+
+enum AssignmentStatus {
+  OPEN
+  IN_PROGRESS
+  CLOSED
+  PENDING
+}
+
+enum RecoveryActionType {
+  SMS
+  CALL
+  VISIT
+  NOTICE_LEGAL
+  OTHER
+}
+
+enum RecoveryActionStatus {
+  PENDING
+  SENT
+  FAILED
+  COMPLETED
+}
