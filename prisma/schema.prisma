@@ -196,14 +196,7 @@ enum AgentStatus {
   BUSY
 }
 
-// enum BorrowerStatus {
-//   ACTIVE
-//   CLOSED
-//   DEFAULTED
-//   IN_RECOVERY
-//   LEGAL
-//   SKIPPEd
-// }
+
 
 enum BorrowerStatus {
   ACTIVE         // Borrower is active and being tracked

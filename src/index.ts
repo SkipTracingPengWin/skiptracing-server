@@ -12,12 +12,24 @@ import verificationRoutes from './routes/verificationRoutes';
 import dashboardRoutes from './routes/dashboardRoutes';
 import locationRoutes from './routes/locationRoutes';
 import recoveryTrendRoutes from './routes/recoveryTrendRoutes';
+import recoveryActionRoutes from './routes/recoveryActionRoutes';
 
 dotenv.config();
 
 const app = express();
 
-app.use(cors());
+app.use(
+  cors({
+    origin: [
+      "http://localhost:3000",
+      "http://192.168.31.16:3000",
+    ],
+    credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization"],
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  })
+);
+
 app.use(express.json());
 
 app.use('/api/auth', authRoutes);
@@ -30,6 +42,7 @@ app.use('/api/verifications', verificationRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/locations', locationRoutes);
 app.use('/api/recovery-trends', recoveryTrendRoutes);
+app.use("/api/recovery-actions", recoveryActionRoutes);
 
 const PORT = process.env.PORT || 5000;
 
