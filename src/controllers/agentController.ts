@@ -30,8 +30,8 @@ export const getAgentById = async (req: Request, res: Response) => {
 // @desc Create agent
 export const createAgent = async (req: Request, res: Response) => {
   try {
-    const agent = await AgentService.createAgent(req.body);
-    res.status(201).json(agent);
+    const result = await AgentService.createAgent(req.body);
+    res.status(201).json(result);
   } catch (error) {
     console.error("Error in createAgent:", error);
     res.status(500).json({ message: "Server error", error: error instanceof Error ? error.message : "Unknown error" });

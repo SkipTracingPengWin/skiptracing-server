@@ -49,6 +49,19 @@ export const AuthService = {
     return user;
   },
 
+  changePassword: async (userId: string, newPassword: string) => {
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+    return prisma.user.update({
+      where: { id: userId },
+      data: {
+        password: hashedPassword,
+        mustChangePassword: false,
+      },
+    });
+  },
+
   getProfile: async (id: string) => {
     return prisma.user.findUnique({
       where: { id },

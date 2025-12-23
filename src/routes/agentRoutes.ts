@@ -13,7 +13,7 @@ const router = express.Router();
 router
     .route('/')
     .get(protect, authorize('ADMIN', 'MANAGER'), getAgents)
-    .post(protect, authorize('ADMIN'), createAgent);
+    .post(protect, authorize('ADMIN', 'MANAGER'), createAgent);
 
 router
     .route('/:id')

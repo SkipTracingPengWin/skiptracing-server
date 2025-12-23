@@ -1,5 +1,7 @@
-import { AgentStatus } from "@prisma/client";
 import { prisma } from "../config/database";
+import bcrypt from "bcryptjs";
+import { generateTempPassword } from "../utils/password.utils";
+import { Role, AgentStatus } from "@prisma/client";
 
 export const AgentService = {
   getAgents: async () => {
@@ -25,12 +27,40 @@ export const AgentService = {
   },
 
   createAgent: async (data: any) => {
-    return prisma.agent.create({
-      data: {
-        ...data,
-        status: AgentStatus.OFFLINE,
-      },
+    const { name, email, phone, location } = data;
+    const tempPassword = generateTempPassword();
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(tempPassword, salt);
+
+    // Transaction to create User and Agent together
+    const result = await prisma.$transaction(async (prisma) => {
+      // 1. Create User
+      const user = await prisma.user.create({
+        data: {
+          name,
+          email,
+          password: hashedPassword,
+          role: Role.AGENT,
+          mustChangePassword: true,
+        },
+      });
+
+      // 2. Create Agent
+      const agent = await prisma.agent.create({
+        data: {
+          userId: user.id,
+          name,
+          email,
+          phone,
+          location,
+          status: AgentStatus.OFFLINE,
+        },
+      });
+
+      return { agent, tempPassword };
     });
+
+    return result;
   },
 
   updateAgent: async (id: string, data: any) => {

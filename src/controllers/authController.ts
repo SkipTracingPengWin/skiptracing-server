@@ -36,6 +36,7 @@ export const loginUser = async (req: Request, res: Response) => {
       name: user.name,
       email: user.email,
       role: user.role,
+      mustChangePassword: user.mustChangePassword,
       token: generateToken(user.id),
     });
   } catch (error) {
@@ -52,6 +53,19 @@ export const profile = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "User not found" });
 
     res.json(user);
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// @desc Change Password
+export const changePassword = async (req: Request, res: Response) => {
+  const { newPassword } = req.body;
+  const userId = req.user!.id; // Assumes middleware sets req.user
+
+  try {
+    await AuthService.changePassword(userId, newPassword);
+    res.json({ message: "Password updated successfully" });
   } catch (error) {
     res.status(500).json({ message: "Server error" });
   }

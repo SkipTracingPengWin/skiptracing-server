@@ -9,6 +9,7 @@ Base URL: `/api/auth`
 | POST | `/register` | `registerUser` | Public |
 | POST | `/login` | `loginUser` | Public |
 | GET | `/profile` | `profile` | `protect` |
+| PUT | `/change-password` | `changePassword` | `protect` |
 
 ## Agents
 Base URL: `/api/agents`
@@ -16,6 +17,7 @@ Base URL: `/api/agents`
 | :--- | :--- | :--- | :--- |
 | GET | `/` | `getAgents` | `protect`, `authorize('ADMIN', 'MANAGER')` |
 | POST | `/` | `createAgent` | `protect`, `authorize('ADMIN')` |
+> **Note:** `createAgent` now returns `{ agent, tempPassword }`. The `tempPassword` must be shared with the agent.
 | GET | `/:id` | `getAgentById` | `protect` |
 | PUT | `/:id` | `updateAgent` | `protect`, `authorize('ADMIN', 'MANAGER')` |
 | DELETE | `/:id` | `deleteAgent` | `protect`, `authorize('ADMIN')` |
