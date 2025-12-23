@@ -27,10 +27,12 @@ export const AgentService = {
   },
 
   createAgent: async (data: any) => {
-    const { name, email, phone, location } = data;
-    const tempPassword = generateTempPassword();
+    const { name, email, phone, location, password } = data;
+    const isManualPassword = !!password;
+    const finalPassword = password || generateTempPassword();
+
     const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(tempPassword, salt);
+    const hashedPassword = await bcrypt.hash(finalPassword, salt);
 
     // Transaction to create User and Agent together
     const result = await prisma.$transaction(async (prisma) => {
@@ -41,7 +43,6 @@ export const AgentService = {
           email,
           password: hashedPassword,
           role: Role.AGENT,
-          mustChangePassword: true,
         },
       });
 
@@ -57,8 +58,13 @@ export const AgentService = {
         },
       });
 
-      return { agent, tempPassword };
+      return { agent, finalPassword };
     });
+
+    // Send email with credentials
+    // We send finalPassword which is either the manual one or the temp one
+    const { EmailService } = await import("./email.service"); // Dynamic import to avoid cycles or ensure loading
+    await EmailService.sendWelcomeEmail(email, name, finalPassword);
 
     return result;
   },

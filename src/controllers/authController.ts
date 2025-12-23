@@ -36,7 +36,7 @@ export const loginUser = async (req: Request, res: Response) => {
       name: user.name,
       email: user.email,
       role: user.role,
-      mustChangePassword: user.mustChangePassword,
+      // mustChangePassword: user.mustChangePassword,
       token: generateToken(user.id),
     });
   } catch (error) {
