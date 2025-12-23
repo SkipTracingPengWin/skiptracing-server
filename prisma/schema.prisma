@@ -110,8 +110,8 @@ model Assignment {
   id           String           @id @default(auto()) @map("_id") @db.ObjectId
   borrowerId   String           @db.ObjectId
   borrower     Borrower         @relation(fields: [borrowerId], references: [id])
-  agentId      String           @db.ObjectId
-  agent        Agent            @relation(fields: [agentId], references: [id])
+  agentId      String?          @db.ObjectId
+  agent        Agent?           @relation(fields: [agentId], references: [id])
   loanId       String?
   amount       String?
   assignedAt   DateTime         @default(now())
