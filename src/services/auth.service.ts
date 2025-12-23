@@ -57,7 +57,7 @@ export const AuthService = {
       where: { id: userId },
       data: {
         password: hashedPassword,
-        mustChangePassword: false,
+
       },
     });
   },

@@ -13,6 +13,7 @@ export const getAssignments = async (req: Request, res: Response) => {
     const assignments = await getAssignmentsService();
     res.json(assignments);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ message: "Server error" });
   }
 };
