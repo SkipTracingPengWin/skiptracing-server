@@ -46,6 +46,7 @@ const updateAgentStats = async (
   });
 
   const totalCases = assignments.length;
+  // Ensure we match the Enum value strictly
   const closedCases = assignments.filter(
     (a: any) => a.status === AssignmentStatus.CLOSED
   );
@@ -54,7 +55,10 @@ const updateAgentStats = async (
     totalCases > 0 ? (closedCases.length / totalCases) * 100 : 0;
 
   const totalRecovered = closedCases.reduce((sum: number, a: any) => {
-    return sum + (a.borrower?.amountNumeric || 0);
+    // Fallback to amount if amountNumeric is 0 or missing.
+    // Both are Floats in schema, so we can use them directly.
+    const amt = a.borrower?.amountNumeric || a.borrower?.amount || 0;
+    return sum + amt;
   }, 0);
 
   await client.agent.update({
@@ -88,13 +92,27 @@ export const createAssignmentService = (data: any) => {
 
 export const updateAssignmentService = async (id: string, data: any) => {
   return prisma.$transaction(async (tx) => {
+    // 1. Get original to check for agent reassignment
+    const originalAssignment = await tx.assignment.findUnique({
+      where: { id },
+    });
+
     const result = await tx.assignment.update({
       where: { id },
       data,
     });
 
+    // 2. Update stats for new agent
     if (result.agentId) {
       await updateAgentStats(result.agentId, tx);
+    }
+
+    // 3. Update stats for OLD agent if changed
+    if (
+      originalAssignment?.agentId &&
+      originalAssignment.agentId !== result.agentId
+    ) {
+      await updateAgentStats(originalAssignment.agentId, tx);
     }
 
     return result;
