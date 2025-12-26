@@ -1,5 +1,5 @@
 import { prisma } from "../config/database";
-import { AssignmentStatus } from "@prisma/client";
+import { AssignmentStatus, Prisma } from "@prisma/client";
 
 export const getAssignmentsService = () => {
   return prisma.assignment.findMany({
@@ -32,39 +32,85 @@ export const getAssignmentByIdService = (id: string) => {
   });
 };
 
+// Helper function to update agent stats
+const updateAgentStats = async (
+  agentId: string,
+  tx: Prisma.TransactionClient
+) => {
+  // Use 'any' cast to avoid strict type mismatch with PrismaClient vs TransactionClient
+  const client = tx as any;
+
+  const assignments = await client.assignment.findMany({
+    where: { agentId },
+    include: { borrower: true },
+  });
+
+  const totalCases = assignments.length;
+  const closedCases = assignments.filter(
+    (a: any) => a.status === AssignmentStatus.CLOSED
+  );
+
+  const successRate =
+    totalCases > 0 ? (closedCases.length / totalCases) * 100 : 0;
+
+  const totalRecovered = closedCases.reduce((sum: number, a: any) => {
+    return sum + (a.borrower?.amountNumeric || 0);
+  }, 0);
+
+  await client.agent.update({
+    where: { id: agentId },
+    data: {
+      cases: totalCases,
+      successRate,
+      totalRecovered,
+    },
+  });
+};
+
 export const createAssignmentService = (data: any) => {
-  return prisma.$transaction(async (prisma) => {
+  return prisma.$transaction(async (tx) => {
     // 1. Create Assignment
-    const assignment = await prisma.assignment.create({
+    const assignment = await tx.assignment.create({
       data: {
         ...data,
         status: AssignmentStatus.OPEN,
       },
     });
 
-    // 2. Increment Agent's case count
+    // 2. Update stats
     if (data.agentId) {
-      await prisma.agent.update({
-        where: { id: data.agentId },
-        data: {
-          cases: { increment: 1 },
-        },
-      });
+      await updateAgentStats(data.agentId, tx);
     }
 
     return assignment;
   });
 };
 
-export const updateAssignmentService = (id: string, data: any) => {
-  return prisma.assignment.update({
-    where: { id },
-    data,
+export const updateAssignmentService = async (id: string, data: any) => {
+  return prisma.$transaction(async (tx) => {
+    const result = await tx.assignment.update({
+      where: { id },
+      data,
+    });
+
+    if (result.agentId) {
+      await updateAgentStats(result.agentId, tx);
+    }
+
+    return result;
   });
 };
 
-export const deleteAssignmentService = (id: string) => {
-  return prisma.assignment.delete({
-    where: { id },
+export const deleteAssignmentService = async (id: string) => {
+  return prisma.$transaction(async (tx) => {
+    const assignment = await tx.assignment.delete({
+      where: { id },
+    });
+
+    if (assignment.agentId) {
+      await updateAgentStats(assignment.agentId, tx);
+    }
+
+    return assignment;
   });
 };
