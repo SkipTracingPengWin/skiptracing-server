@@ -27,15 +27,15 @@ export const borrowerService = {
 
 
 
-create: async (data: any) => {
-  return prisma.borrower.create({
-    data: {
-      ...data,
-      status: data.status || BorrowerStatus.ACTIVE,
-    
-    },
-  });
-},
+  create: async (data: any) => {
+    return prisma.borrower.create({
+      data: {
+        ...data,
+        status: data.status || BorrowerStatus.ACTIVE,
+
+      },
+    });
+  },
 
 
 
