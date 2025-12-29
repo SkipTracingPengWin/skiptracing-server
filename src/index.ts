@@ -13,6 +13,7 @@ import dashboardRoutes from './routes/dashboardRoutes';
 import locationRoutes from './routes/locationRoutes';
 import recoveryTrendRoutes from './routes/recoveryTrendRoutes';
 import recoveryActionRoutes from './routes/recoveryActionRoutes';
+import socialMediaRoutes from './routes/socialMediaRoutes';
 
 dotenv.config();
 
@@ -43,7 +44,7 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/locations', locationRoutes);
 app.use('/api/recovery-trends', recoveryTrendRoutes);
 app.use("/api/recovery-actions", recoveryActionRoutes);
-
+app.use("/api/social-media", socialMediaRoutes);
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {

@@ -64,8 +64,20 @@ model Borrower {
   assignments       Assignment[]
   auditLogs         AuditLog[]
   locations         Location[]
+  socialProfiles    SocialMediaProfile[]
 }
 
+model SocialMediaProfile {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  borrowerId  String?   @db.ObjectId
+  borrower    Borrower? @relation(fields: [borrowerId], references: [id])
+  platform    String
+  url         String
+  title       String?
+  snippet     String?
+  metadata    Json?
+  createdAt   DateTime  @default(now())
+}
 model Verification {
   id          String             @id @default(auto()) @map("_id") @db.ObjectId
   borrowerId  String             @db.ObjectId
