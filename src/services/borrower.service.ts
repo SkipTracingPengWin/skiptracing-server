@@ -21,8 +21,9 @@ export const borrowerService = {
         skipTraceResults: true,
         recoveryActions: true,
         locations: true,
+        socialProfiles: true,
       },
-    });
+    });     
   },
 
 
