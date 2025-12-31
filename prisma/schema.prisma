@@ -49,6 +49,7 @@ model Borrower {
   loanType          String?
   amount            Float             @default(0.0)
   amountNumeric     Float             @default(0.0)
+  dueDate           DateTime?         // Expected repayment date
   overdue           String?
   overdueDays       Int               @default(0)
   risk              String? // high, medium, low, critical
