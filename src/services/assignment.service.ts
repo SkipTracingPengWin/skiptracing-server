@@ -1,5 +1,6 @@
 import { prisma } from "../config/database";
 import { AssignmentStatus, Prisma } from "@prisma/client";
+import { auditLogService } from "./auditLogService";
 
 export const getAssignmentsService = () => {
   return prisma.assignment.findMany({
@@ -71,8 +72,8 @@ const updateAgentStats = async (
   });
 };
 
-export const createAssignmentService = (data: any) => {
-  return prisma.$transaction(async (tx) => {
+export const createAssignmentService = async (data: any) => {
+  const assignment = await prisma.$transaction(async (tx) => {
     // 1. Create Assignment
     const assignment = await tx.assignment.create({
       data: {
@@ -88,10 +89,21 @@ export const createAssignmentService = (data: any) => {
 
     return assignment;
   });
+
+  await auditLogService.createLog({
+    borrowerId: assignment.borrowerId,
+    module: "ASSIGNMENT",
+    action: "CREATE",
+    details: `Assignment created for agent ${data.agentId || 'Unassigned'}`,
+    status: "SUCCESS",
+    actorId: "SYSTEM",
+  });
+
+  return assignment;
 };
 
 export const updateAssignmentService = async (id: string, data: any) => {
-  return prisma.$transaction(async (tx) => {
+  const updatedAssignment = await prisma.$transaction(async (tx) => {
     // 1. Get original to check for agent reassignment
     const originalAssignment = await tx.assignment.findUnique({
       where: { id },
@@ -117,10 +129,21 @@ export const updateAssignmentService = async (id: string, data: any) => {
 
     return result;
   });
+
+  await auditLogService.createLog({
+    borrowerId: updatedAssignment.borrowerId,
+    module: "ASSIGNMENT",
+    action: "UPDATE",
+    details: `Assignment ${id} updated`,
+    status: "SUCCESS",
+    actorId: "SYSTEM",
+  });
+
+  return updatedAssignment;
 };
 
 export const deleteAssignmentService = async (id: string) => {
-  return prisma.$transaction(async (tx) => {
+  const deletedAssignment = await prisma.$transaction(async (tx) => {
     const assignment = await tx.assignment.delete({
       where: { id },
     });
@@ -131,4 +154,15 @@ export const deleteAssignmentService = async (id: string) => {
 
     return assignment;
   });
+
+  await auditLogService.createLog({
+    borrowerId: deletedAssignment.borrowerId,
+    module: "ASSIGNMENT",
+    action: "DELETE",
+    details: `Assignment ${id} deleted`,
+    status: "SUCCESS",
+    actorId: "SYSTEM",
+  });
+
+  return deletedAssignment;
 };

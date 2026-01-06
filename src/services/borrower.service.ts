@@ -1,4 +1,5 @@
 import { PrismaClient, BorrowerStatus } from "@prisma/client";
+import { auditLogService } from "./auditLogService";
 
 const prisma = new PrismaClient();
 
@@ -72,28 +73,60 @@ export const borrowerService = {
   },
 
   create: async (data: any) => {
-    return prisma.borrower.create({
+    const newBorrower = await prisma.borrower.create({
       data: {
         ...data,
         status: data.status || BorrowerStatus.ACTIVE,
-
       },
     });
+
+    await auditLogService.createLog({
+      borrowerId: newBorrower.id,
+      module: "BORROWER",
+      action: "CREATE",
+      details: `Borrower ${newBorrower.name} created`,
+      status: "SUCCESS",
+      actorId: "SYSTEM", // TODO: Pass user ID if available in context
+    });
+
+    return newBorrower;
   },
 
 
 
   update: async (id: string, data: any) => {
-    return prisma.borrower.update({
+    const updatedBorrower = await prisma.borrower.update({
       where: { id },
       data,
     });
+
+    await auditLogService.createLog({
+      borrowerId: id,
+      module: "BORROWER",
+      action: "UPDATE",
+      details: `Borrower details updated`,
+      status: "SUCCESS",
+      actorId: "SYSTEM",
+    });
+
+    return updatedBorrower;
   },
 
   delete: async (id: string) => {
-    return prisma.borrower.delete({
+    const deletedBorrower = await prisma.borrower.delete({
       where: { id },
     });
+
+    await auditLogService.createLog({
+      borrowerId: id,
+      module: "BORROWER",
+      action: "DELETE",
+      details: `Borrower deleted`,
+      status: "SUCCESS",
+      actorId: "SYSTEM",
+    });
+
+    return deletedBorrower;
   },
 };
 

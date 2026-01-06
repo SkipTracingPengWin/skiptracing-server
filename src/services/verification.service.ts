@@ -64,7 +64,9 @@
 
 import { prisma } from "../config/database";
 import { VerificationStatus, VerificationType } from "@prisma/client";
+
 import { verifyKYC } from "../utils/aadhaar.util";
+import { auditLogService } from "./auditLogService";
 
 // ===============================
 // GET ALL VERIFICATIONS
@@ -130,7 +132,7 @@ export const createVerificationService = async (data: any) => {
   }
 
   // 3️⃣ Update verification record
-  return prisma.verification.update({
+  const finalVerification = await prisma.verification.update({
     where: { id: verification.id },
     data: {
       status:
@@ -142,23 +144,58 @@ export const createVerificationService = async (data: any) => {
       verifiedBy: "SYSTEM",
     },
   });
+
+  await auditLogService.createLog({
+    borrowerId: finalVerification.borrowerId,
+    module: "VERIFICATION",
+    action: "CREATE",
+    details: `Verification ${finalVerification.type} requested. Result: ${finalVerification.status}`,
+    status: "SUCCESS",
+    actorId: "SYSTEM",
+  });
+
+  return finalVerification;
 };
 
 // ===============================
 // UPDATE VERIFICATION
 // ===============================
-export const updateVerificationService = (id: string, data: any) => {
-  return prisma.verification.update({
+// UPDATE VERIFICATION
+export const updateVerificationService = async (id: string, data: any) => {
+  const updatedVerification = await prisma.verification.update({
     where: { id },
     data,
   });
+
+  await auditLogService.createLog({
+    borrowerId: updatedVerification.borrowerId,
+    module: "VERIFICATION",
+    action: "UPDATE",
+    details: `Verification ${id} updated`,
+    status: "SUCCESS",
+    actorId: "SYSTEM",
+  });
+
+  return updatedVerification;
 };
 
 // ===============================
 // DELETE VERIFICATION
 // ===============================
-export const deleteVerificationService = (id: string) => {
-  return prisma.verification.delete({
+// DELETE VERIFICATION
+export const deleteVerificationService = async (id: string) => {
+  const deletedVerification = await prisma.verification.delete({
     where: { id },
   });
+
+  await auditLogService.createLog({
+    borrowerId: deletedVerification.borrowerId,
+    module: "VERIFICATION",
+    action: "DELETE",
+    details: `Verification ${id} deleted`,
+    status: "SUCCESS",
+    actorId: "SYSTEM",
+  });
+
+  return deletedVerification;
 };
