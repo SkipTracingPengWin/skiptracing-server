@@ -7,12 +7,13 @@ import {
     deleteAgent,
 } from '../controllers/agentController';
 import { protect, authorize } from '../middleware/authMiddleware';
+import { Agent } from 'http';
 
 const router = express.Router();
 
 router
     .route('/')
-    .get(protect, authorize('ADMIN', 'MANAGER'), getAgents)
+    .get(protect, authorize('ADMIN', 'MANAGER', 'AGENT'), getAgents)
     .post(protect, authorize('ADMIN', 'MANAGER'), createAgent);
 
 router
