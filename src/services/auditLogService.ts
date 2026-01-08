@@ -4,6 +4,8 @@ const prisma = new PrismaClient();
 
 export interface CreateAuditLogParams {
     actorId?: string; // ID of the user or agent performing the action
+    actorName?: string; // Name of the actor
+    actorRole?: string; // Role of the actor
     borrowerId?: string; // ID of the borrower related to the action
     module: 'BORROWER' | 'AGENT' | 'ASSIGNMENT' | 'VERIFICATION' | 'SOCIAL_MEDIA' | 'RECOVERY';
     action: string; // e.g., 'CREATE', 'UPDATE', 'DELETE', 'STATUS_CHANGE'
@@ -20,11 +22,14 @@ export const auditLogService = {
         try {
             const isSystem = params.actorId === 'SYSTEM';
             const actorId = isSystem ? null : params.actorId;
+            const actorName = params.actorName || (isSystem ? 'SYSTEM' : undefined);
             const details = isSystem ? `[SYSTEM] ${params.details}` : (params.details || '');
 
             await prisma.auditLog.create({
                 data: {
                     actorId,
+                    actorName,
+                    actorRole: params.actorRole,
                     borrowerId: params.borrowerId,
                     module: params.module,
                     action: params.action,

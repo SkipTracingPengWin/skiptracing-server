@@ -8,8 +8,12 @@ export const getRecoveryActionsService = async () => {
   });
 };
 
-export const createRecoveryActionService = async (data: any) => {
+export const createRecoveryActionService = async (data: any, user?: any) => {
   const recoveryAction = await prisma.recoveryAction.create({ data });
+
+  const actorId = user ? user.id : (data.executedBy || "SYSTEM");
+  const actorName = user ? user.name : "SYSTEM";
+  const actorRole = user ? user.role : undefined;
 
   await auditLogService.createLog({
     borrowerId: recoveryAction.borrowerId,
@@ -17,7 +21,9 @@ export const createRecoveryActionService = async (data: any) => {
     action: "CREATE",
     details: `Recovery action ${recoveryAction.type} initiated`,
     status: "SUCCESS",
-    actorId: data.executedBy || "SYSTEM",
+    actorId,
+    actorName,
+    actorRole,
   });
 
   return recoveryAction;
@@ -25,7 +31,8 @@ export const createRecoveryActionService = async (data: any) => {
 
 export const updateRecoveryActionStatusService = async (
   id: string,
-  status: RecoveryActionStatus
+  status: RecoveryActionStatus,
+  user?: any
 ) => {
   const updatedAction = await prisma.recoveryAction.update({
     where: { id }, // if id is string type in schema
@@ -35,13 +42,19 @@ export const updateRecoveryActionStatusService = async (
     },
   });
 
+  const actorId = user ? user.id : (updatedAction.executedBy || "SYSTEM");
+  const actorName = user ? user.name : "SYSTEM";
+  const actorRole = user ? user.role : undefined;
+
   await auditLogService.createLog({
     borrowerId: updatedAction.borrowerId,
     module: "RECOVERY",
     action: "STATUS_CHANGE",
     details: `Recovery action ${updatedAction.type} status changed to ${status}`,
     status: "SUCCESS",
-    actorId: updatedAction.executedBy || "SYSTEM",
+    actorId,
+    actorName,
+    actorRole,
   });
 
   return updatedAction;

@@ -165,6 +165,8 @@ model RecoveryAction {
 model AuditLog {
   id         String    @id @default(auto()) @map("_id") @db.ObjectId
   actorId    String?   @db.ObjectId
+  actorName  String?
+  actorRole  String?
   user       User?     @relation(fields: [actorId], references: [id])
   borrowerId String?   @db.ObjectId
   borrower   Borrower? @relation(fields: [borrowerId], references: [id])

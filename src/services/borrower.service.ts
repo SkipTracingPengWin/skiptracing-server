@@ -72,7 +72,7 @@ export const borrowerService = {
     return borrower;
   },
 
-  create: async (data: any) => {
+  create: async (data: any, user?: any) => {
     const newBorrower = await prisma.borrower.create({
       data: {
         ...data,
@@ -80,25 +80,33 @@ export const borrowerService = {
       },
     });
 
+    const actorId = user ? user.id : "SYSTEM";
+    const actorName = user ? user.name : "SYSTEM";
+    const actorRole = user ? user.role : undefined;
+
     await auditLogService.createLog({
       borrowerId: newBorrower.id,
       module: "BORROWER",
       action: "CREATE",
       details: `Borrower ${newBorrower.name} created`,
       status: "SUCCESS",
-      actorId: "SYSTEM", // TODO: Pass user ID if available in context
+      actorId,
+      actorName,
+      actorRole,
     });
 
     return newBorrower;
   },
 
-
-
-  update: async (id: string, data: any) => {
+  update: async (id: string, data: any, user?: any) => {
     const updatedBorrower = await prisma.borrower.update({
       where: { id },
       data,
     });
+
+    const actorId = user ? user.id : "SYSTEM";
+    const actorName = user ? user.name : "SYSTEM";
+    const actorRole = user ? user.role : undefined;
 
     await auditLogService.createLog({
       borrowerId: id,
@@ -106,16 +114,22 @@ export const borrowerService = {
       action: "UPDATE",
       details: `Borrower details updated`,
       status: "SUCCESS",
-      actorId: "SYSTEM",
+      actorId,
+      actorName,
+      actorRole,
     });
 
     return updatedBorrower;
   },
 
-  delete: async (id: string) => {
+  delete: async (id: string, user?: any) => {
     const deletedBorrower = await prisma.borrower.delete({
       where: { id },
     });
+
+    const actorId = user ? user.id : "SYSTEM";
+    const actorName = user ? user.name : "SYSTEM";
+    const actorRole = user ? user.role : undefined;
 
     await auditLogService.createLog({
       borrowerId: id,
@@ -123,7 +137,9 @@ export const borrowerService = {
       action: "DELETE",
       details: `Borrower deleted`,
       status: "SUCCESS",
-      actorId: "SYSTEM",
+      actorId,
+      actorName,
+      actorRole,
     });
 
     return deletedBorrower;

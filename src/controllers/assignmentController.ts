@@ -34,7 +34,7 @@ export const getAssignmentById = async (req: Request, res: Response) => {
 
 export const createAssignment = async (req: Request, res: Response) => {
   try {
-    const assignment = await createAssignmentService(req.body);
+    const assignment = await createAssignmentService(req.body, req.user);
     res.status(201).json(assignment);
   } catch (error) {
     res.status(500).json({ message: "Server error" });
@@ -43,7 +43,7 @@ export const createAssignment = async (req: Request, res: Response) => {
 
 export const updateAssignment = async (req: Request, res: Response) => {
   try {
-    const assignment = await updateAssignmentService(req.params.id, req.body);
+    const assignment = await updateAssignmentService(req.params.id, req.body, req.user);
     res.json(assignment);
   } catch (error) {
     res.status(404).json({ message: "Assignment not found" });
@@ -52,7 +52,7 @@ export const updateAssignment = async (req: Request, res: Response) => {
 
 export const deleteAssignment = async (req: Request, res: Response) => {
   try {
-    await deleteAssignmentService(req.params.id);
+    await deleteAssignmentService(req.params.id, req.user);
     res.json({ message: "Assignment removed" });
   } catch (error) {
     res.status(404).json({ message: "Assignment not found" });

@@ -72,7 +72,7 @@ const updateAgentStats = async (
   });
 };
 
-export const createAssignmentService = async (data: any) => {
+export const createAssignmentService = async (data: any, user?: any) => {
   const assignment = await prisma.$transaction(async (tx) => {
     // 1. Create Assignment
     const assignment = await tx.assignment.create({
@@ -90,19 +90,25 @@ export const createAssignmentService = async (data: any) => {
     return assignment;
   });
 
+  const actorId = user ? user.id : "SYSTEM";
+  const actorName = user ? user.name : "SYSTEM";
+  const actorRole = user ? user.role : undefined;
+
   await auditLogService.createLog({
     borrowerId: assignment.borrowerId,
     module: "ASSIGNMENT",
     action: "CREATE",
     details: `Assignment created for agent ${data.agentId || 'Unassigned'}`,
     status: "SUCCESS",
-    actorId: "SYSTEM",
+    actorId,
+    actorName,
+    actorRole,
   });
 
   return assignment;
 };
 
-export const updateAssignmentService = async (id: string, data: any) => {
+export const updateAssignmentService = async (id: string, data: any, user?: any) => {
   const updatedAssignment = await prisma.$transaction(async (tx) => {
     // 1. Get original to check for agent reassignment
     const originalAssignment = await tx.assignment.findUnique({
@@ -130,19 +136,25 @@ export const updateAssignmentService = async (id: string, data: any) => {
     return result;
   });
 
+  const actorId = user ? user.id : "SYSTEM";
+  const actorName = user ? user.name : "SYSTEM";
+  const actorRole = user ? user.role : undefined;
+
   await auditLogService.createLog({
     borrowerId: updatedAssignment.borrowerId,
     module: "ASSIGNMENT",
     action: "UPDATE",
     details: `Assignment ${id} updated`,
     status: "SUCCESS",
-    actorId: "SYSTEM",
+    actorId,
+    actorName,
+    actorRole,
   });
 
   return updatedAssignment;
 };
 
-export const deleteAssignmentService = async (id: string) => {
+export const deleteAssignmentService = async (id: string, user?: any) => {
   const deletedAssignment = await prisma.$transaction(async (tx) => {
     const assignment = await tx.assignment.delete({
       where: { id },
@@ -155,13 +167,19 @@ export const deleteAssignmentService = async (id: string) => {
     return assignment;
   });
 
+  const actorId = user ? user.id : "SYSTEM";
+  const actorName = user ? user.name : "SYSTEM";
+  const actorRole = user ? user.role : undefined;
+
   await auditLogService.createLog({
     borrowerId: deletedAssignment.borrowerId,
     module: "ASSIGNMENT",
     action: "DELETE",
     details: `Assignment ${id} deleted`,
     status: "SUCCESS",
-    actorId: "SYSTEM",
+    actorId,
+    actorName,
+    actorRole,
   });
 
   return deletedAssignment;

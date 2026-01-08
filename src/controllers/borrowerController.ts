@@ -30,7 +30,7 @@ export const getBorrowerById = async (req: Request, res: Response) => {
 // CREATE
 export const createBorrower = async (req: Request, res: Response) => {
   try {
-    const borrower = await borrowerService.create(req.body);
+    const borrower = await borrowerService.create(req.body, req.user);
     res.status(201).json(borrower);
   } catch (error) {
     res.status(500).json({ message: "Server error" });
@@ -40,7 +40,7 @@ export const createBorrower = async (req: Request, res: Response) => {
 // UPDATE
 export const updateBorrower = async (req: Request, res: Response) => {
   try {
-    const borrower = await borrowerService.update(req.params.id, req.body);
+    const borrower = await borrowerService.update(req.params.id, req.body, req.user);
     res.json(borrower);
   } catch (error) {
     res.status(404).json({ message: "Borrower not found" });
@@ -50,7 +50,7 @@ export const updateBorrower = async (req: Request, res: Response) => {
 // DELETE
 export const deleteBorrower = async (req: Request, res: Response) => {
   try {
-    await borrowerService.delete(req.params.id);
+    await borrowerService.delete(req.params.id, req.user);
     res.json({ message: "Borrower removed" });
   } catch (error) {
     res.status(404).json({ message: "Borrower not found" });

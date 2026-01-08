@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { PrismaClient } from '@prisma/client';
+import { auditLogService } from "./auditLogService";
 
 const prisma = new PrismaClient();
 
@@ -46,7 +47,8 @@ export const searchSocialMedia = async (
     location?: string,
     email?: string,
     phone?: string,
-    borrowerId?: string
+    borrowerId?: string,
+    user?: any
 ): Promise<SocialProfile[]> => {
     try {
         const apiKey = process.env.SERPAPI_KEY;
@@ -117,6 +119,21 @@ export const searchSocialMedia = async (
             console.log(`[SocialSearch] Saving ${dbRecords.length} profiles for borrower ${borrowerId}`);
             await prisma.socialMediaProfile.createMany({
                 data: dbRecords
+            });
+
+            const actorId = user ? user.id : "SYSTEM";
+            const actorName = user ? user.name : "SYSTEM";
+            const actorRole = user ? user.role : undefined;
+
+            await auditLogService.createLog({
+                borrowerId: borrowerId,
+                module: "SOCIAL_MEDIA",
+                action: "CREATE",
+                details: `Saved ${dbRecords.length} social media profiles`,
+                status: "SUCCESS",
+                actorId,
+                actorName,
+                actorRole,
             });
         }
 

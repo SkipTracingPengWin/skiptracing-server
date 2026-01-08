@@ -12,7 +12,7 @@ export const searchProfiles = async (req: Request, res: Response) => {
             });
         }
 
-        const profiles = await searchSocialMedia(name, location, email, phone, borrowerId);
+        const profiles = await searchSocialMedia(name, location, email, phone, borrowerId, req.user);
 
         res.status(200).json({
             success: true,

@@ -80,7 +80,7 @@ export const getVerificationsService = () => {
 // ===============================
 // CREATE VERIFICATION
 // ===============================
-export const createVerificationService = async (data: any) => {
+export const createVerificationService = async (data: any, user?: any) => {
   // 1️⃣ Create initial verification request
   const verification = await prisma.verification.create({
     data: {
@@ -145,13 +145,19 @@ export const createVerificationService = async (data: any) => {
     },
   });
 
+  const actorId = user ? user.id : "SYSTEM";
+  const actorName = user ? user.name : "SYSTEM";
+  const actorRole = user ? user.role : undefined;
+
   await auditLogService.createLog({
     borrowerId: finalVerification.borrowerId,
     module: "VERIFICATION",
     action: "CREATE",
     details: `Verification ${finalVerification.type} requested. Result: ${finalVerification.status}`,
     status: "SUCCESS",
-    actorId: "SYSTEM",
+    actorId,
+    actorName,
+    actorRole,
   });
 
   return finalVerification;
@@ -161,11 +167,15 @@ export const createVerificationService = async (data: any) => {
 // UPDATE VERIFICATION
 // ===============================
 // UPDATE VERIFICATION
-export const updateVerificationService = async (id: string, data: any) => {
+export const updateVerificationService = async (id: string, data: any, user?: any) => {
   const updatedVerification = await prisma.verification.update({
     where: { id },
     data,
   });
+
+  const actorId = user ? user.id : "SYSTEM";
+  const actorName = user ? user.name : "SYSTEM";
+  const actorRole = user ? user.role : undefined;
 
   await auditLogService.createLog({
     borrowerId: updatedVerification.borrowerId,
@@ -173,7 +183,9 @@ export const updateVerificationService = async (id: string, data: any) => {
     action: "UPDATE",
     details: `Verification ${id} updated`,
     status: "SUCCESS",
-    actorId: "SYSTEM",
+    actorId,
+    actorName,
+    actorRole,
   });
 
   return updatedVerification;
@@ -183,10 +195,14 @@ export const updateVerificationService = async (id: string, data: any) => {
 // DELETE VERIFICATION
 // ===============================
 // DELETE VERIFICATION
-export const deleteVerificationService = async (id: string) => {
+export const deleteVerificationService = async (id: string, user?: any) => {
   const deletedVerification = await prisma.verification.delete({
     where: { id },
   });
+
+  const actorId = user ? user.id : "SYSTEM";
+  const actorName = user ? user.name : "SYSTEM";
+  const actorRole = user ? user.role : undefined;
 
   await auditLogService.createLog({
     borrowerId: deletedVerification.borrowerId,
@@ -194,7 +210,9 @@ export const deleteVerificationService = async (id: string) => {
     action: "DELETE",
     details: `Verification ${id} deleted`,
     status: "SUCCESS",
-    actorId: "SYSTEM",
+    actorId,
+    actorName,
+    actorRole,
   });
 
   return deletedVerification;
