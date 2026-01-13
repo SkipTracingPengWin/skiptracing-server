@@ -4,6 +4,9 @@ import { auditLogService } from "./auditLogService";
 
 export const getRecoveryActionsService = async () => {
   return await prisma.recoveryAction.findMany({
+     include: {
+      borrower: true
+    },
     orderBy: { createdAt: "desc" },
   });
 };

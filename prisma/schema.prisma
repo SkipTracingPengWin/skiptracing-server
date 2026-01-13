@@ -89,7 +89,7 @@ model Verification {
   result      Json?
   requestedBy String?
   verifiedBy  String?
-  priority    String? // High, Urgent, etc.
+  // priority    String? // High, Urgent, etc.
   requestedAt DateTime           @default(now())
   completedAt DateTime?
   createdAt   DateTime           @default(now())
@@ -155,7 +155,7 @@ model RecoveryAction {
   borrowerId String               @db.ObjectId
   borrower   Borrower             @relation(fields: [borrowerId], references: [id])
   type       RecoveryActionType
-  payload    Json?
+  priority   String?
   status     RecoveryActionStatus @default(PENDING)
   executedBy String?
   executedAt DateTime?
