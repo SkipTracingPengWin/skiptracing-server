@@ -26,7 +26,6 @@ export const createVerificationService = async (data: any, user?: any) => {
       type: data.type,
       provider: "MOCK",
       requestedBy: data.requestedBy,
-      priority: data.priority,
       status: VerificationStatus.PENDING,
     },
   });
