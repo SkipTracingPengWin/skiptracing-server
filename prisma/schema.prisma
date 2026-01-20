@@ -158,6 +158,7 @@ model RecoveryAction {
   priority   String?
   status     RecoveryActionStatus @default(PENDING)
   executedBy String?
+  notes      String?
   executedAt DateTime?
   createdAt  DateTime             @default(now())
 }
