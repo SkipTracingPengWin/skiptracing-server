@@ -74,4 +74,35 @@ export const AuthService = {
       },
     });
   },
+
+  updateProfile: async (userId: string, data: { name?: string; email?: string }) => {
+    const { name, email } = data;
+
+    // specific check: if email is changing, ensure it's not taken by another user
+    if (email) {
+      const existingUser = await prisma.user.findUnique({
+        where: { email },
+      });
+
+      if (existingUser && existingUser.id !== userId) {
+        throw new Error("Email already in use");
+      }
+    }
+
+    return prisma.user.update({
+      where: { id: userId },
+      data: {
+        name,
+        email,
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+  },
 };

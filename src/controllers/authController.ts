@@ -58,6 +58,26 @@ export const profile = async (req: Request, res: Response) => {
   }
 };
 
+// @desc Update Profile
+export const updateProfile = async (req: Request, res: Response) => {
+  try {
+    const { name, email } = req.body;
+    const userId = req.user!.id;
+
+    if (!name && !email) {
+      return res.status(400).json({ message: "Please provide name or email to update" });
+    }
+
+    const updatedUser = await AuthService.updateProfile(userId, { name, email });
+    res.json(updatedUser);
+  } catch (error: any) {
+    if (error.message === "Email already in use") {
+      return res.status(400).json({ message: error.message });
+    }
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 // @desc Change Password
 export const changePassword = async (req: Request, res: Response) => {
   const { newPassword } = req.body;
