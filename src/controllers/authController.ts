@@ -80,11 +80,19 @@ export const updateProfile = async (req: Request, res: Response) => {
 
 // @desc Change Password
 export const changePassword = async (req: Request, res: Response) => {
-  const { newPassword } = req.body;
-  const userId = req.user!.id; // Assumes middleware sets req.user
+  const { newPassword, email } = req.body;
+
+  if (!email) {
+    return res.status(400).json({ message: "Email is required" });
+  }
 
   try {
-    await AuthService.changePassword(userId, newPassword);
+    const user = await AuthService.getUserByEmail(email);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    await AuthService.changePassword(user.id, newPassword);
     res.json({ message: "Password updated successfully" });
   } catch (error) {
     res.status(500).json({ message: "Server error" });
