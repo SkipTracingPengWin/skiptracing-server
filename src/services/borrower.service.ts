@@ -4,8 +4,32 @@ import { auditLogService } from "./auditLogService";
 const prisma = new PrismaClient();
 
 export const borrowerService = {
-  getAll: async () => {
+  getAll: async (user?: any) => {
+    let whereClause: any = {};
+
+    if (user && user.role === "AGENT") {
+      // Find the agent profile associated with this user
+      const agentProfile = await prisma.agent.findUnique({
+        where: { userId: user.id },
+      });
+
+      if (agentProfile) {
+        whereClause = {
+          assignments: {
+            some: {
+              agentId: agentProfile.id,
+            },
+          },
+        };
+      } else {
+        // If user is AGENT role but has no Agent profile, they shouldn't see any borrowers or maybe handle error
+        // For safety, return empty list or allow strict filter that won't match anything
+        whereClause = { id: "non-existent" };
+      }
+    }
+
     const borrowers = await prisma.borrower.findMany({
+      where: whereClause,
       include: {
         assignments: true,
         verifications: true,

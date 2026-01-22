@@ -5,7 +5,7 @@ import { borrowerService } from "../services/borrower.service";
 // GET ALL
 export const getBorrowers = async (req: Request, res: Response) => {
   try {
-    const borrowers = await borrowerService.getAll();
+    const borrowers = await borrowerService.getAll(req.user);
     res.json(borrowers);
   } catch (error) {
     res.status(500).json({ message: "Server error" });
