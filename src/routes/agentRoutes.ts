@@ -19,7 +19,7 @@ router
 router
     .route('/:id')
     .get(protect, getAgentById)
-    .put(protect, authorize('ADMIN', 'MANAGER'), updateAgent)
+    .put(protect, authorize('ADMIN', 'MANAGER', 'AGENT'), updateAgent)
     .delete(protect, authorize('ADMIN'), deleteAgent);
 
 export default router;

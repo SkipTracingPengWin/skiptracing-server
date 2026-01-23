@@ -120,6 +120,7 @@ model Location {
   lastSeen   DateTime?
   confidence String? // High, Medium, Low
   source     String? // Mobile Signal, Social Media
+  metadata   Json?
   createdAt  DateTime  @default(now())
 }
 
@@ -227,7 +228,7 @@ enum Role {
 enum AgentStatus {
   ONLINE
   OFFLINE
-  ON_BREAK
+  LEAVE
   BUSY
 }
 

@@ -56,3 +56,14 @@ export const deleteBorrower = async (req: Request, res: Response) => {
     res.status(404).json({ message: "Borrower not found" });
   }
 };
+
+// FETCH OSM LOCATION
+export const updateLocationFromOSM = async (req: Request, res: Response) => {
+  try {
+    const location = await borrowerService.fetchAndStoreLocation(req.params.id, req.user);
+    res.json(location);
+  } catch (error: any) {
+    console.error(error);
+    res.status(400).json({ message: error.message || "Failed to fetch and store location" });
+  }
+};

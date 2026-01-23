@@ -1,5 +1,6 @@
 import { PrismaClient, BorrowerStatus } from "@prisma/client";
 import { auditLogService } from "./auditLogService";
+import { OsmService } from "./osm.service";
 
 const prisma = new PrismaClient();
 
@@ -167,6 +168,63 @@ export const borrowerService = {
     });
 
     return deletedBorrower;
+  },
+
+  fetchAndStoreLocation: async (borrowerId: string, user?: any) => {
+    const borrower = await prisma.borrower.findUnique({
+      where: { id: borrowerId },
+    });
+
+    if (!borrower) throw new Error("Borrower not found");
+    if (!borrower.address) throw new Error("Borrower has no address to search");
+
+    const osmResults = await OsmService.searchAddress(borrower.address);
+
+    if (!osmResults || osmResults.length === 0) {
+      throw new Error("No location results found from OpenStreetMap");
+    }
+
+    const bestMatch = osmResults[0];
+
+    // Create Location record
+    const location = await prisma.location.create({
+      data: {
+        borrowerId,
+        latitude: parseFloat(bestMatch.lat),
+        longitude: parseFloat(bestMatch.lon),
+        address: bestMatch.display_name,
+        source: "OpenStreetMap",
+        confidence: "High",
+        // @ts-ignore: Prisma client outdated due to file lock
+        metadata: bestMatch as any,
+        lastSeen: new Date(),
+      },
+    });
+
+    // Update Borrower's main location field as well for quick access
+    await prisma.borrower.update({
+      where: { id: borrowerId },
+      data: {
+        location: `${bestMatch.lat}, ${bestMatch.lon}`,
+      },
+    });
+
+    const actorId = user ? user.id : "SYSTEM";
+    const actorName = user ? user.name : "SYSTEM";
+    const actorRole = user ? user.role : undefined;
+
+    await auditLogService.createLog({
+      borrowerId,
+      module: "BORROWER",
+      action: "UPDATE",
+      details: `Location updated via OpenStreetMap: ${bestMatch.display_name}`,
+      status: "SUCCESS",
+      actorId,
+      actorName,
+      actorRole,
+    });
+
+    return location;
   },
 };
 
