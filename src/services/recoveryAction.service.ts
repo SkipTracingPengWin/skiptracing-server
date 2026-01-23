@@ -2,10 +2,35 @@ import { RecoveryActionStatus } from "@prisma/client";
 import { prisma } from "../config/database";
 import { auditLogService } from "./auditLogService";
 
-export const getRecoveryActionsService = async () => {
+export const getRecoveryActionsService = async (user?: any) => {
+  let where: any = {};
+
+  if (user && user.role === "AGENT") {
+    const agent = await prisma.agent.findUnique({
+      where: { userId: user.id },
+    });
+
+    if (agent) {
+      where = {
+        borrower: {
+          assignments: {
+            some: {
+              agentId: agent.id,
+            },
+          },
+        },
+      };
+    } else {
+      // If user is AGENT role but no Agent record found, return empty or handle gracefully
+      // For safety, return empty list if they are an agent but not linked correctly
+      return [];
+    }
+  }
+
   return await prisma.recoveryAction.findMany({
-     include: {
-      borrower: true
+    where,
+    include: {
+      borrower: true,
     },
     orderBy: { createdAt: "desc" },
   });

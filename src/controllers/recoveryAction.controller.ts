@@ -7,7 +7,7 @@ import {
 
 export const getRecoveryActions = async (req: Request, res: Response) => {
     try {
-        const actions = await getRecoveryActionsService();
+        const actions = await getRecoveryActionsService(req.user);
         res.status(200).json(actions);
     } catch (error) {
         res.status(500).json({ message: "Server error" });
