@@ -171,6 +171,15 @@ export const borrowerService = {
   },
 
   fetchAndStoreLocation: async (borrowerId: string, user?: any) => {
+    // Check if location already exists
+    const existingLocation = await prisma.location.findFirst({
+      where: { borrowerId },
+    });
+
+    if (existingLocation) {
+      return existingLocation;
+    }
+
     const borrower = await prisma.borrower.findUnique({
       where: { id: borrowerId },
     });
