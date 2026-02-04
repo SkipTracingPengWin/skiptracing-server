@@ -1,12 +1,13 @@
 import express from 'express';
-import { searchProfiles } from '../controllers/socialMediaController';
-// In a real scenario, you'd likely import 'protect' middleware here.
-// import { protect } from '../middleware/authMiddleware';
+import { searchProfiles, getSocialMediaByAgent } from '../controllers/socialMediaController';
+import { protect, authorize } from '../middleware/authMiddleware';
 
 const router = express.Router();
 
-// Define route
-// If auth is required, add middleware: router.post('/search', protect, searchProfiles);
+// Search for social media profiles
 router.post('/search', searchProfiles);
+
+// Get social media profiles for borrowers assigned to an agent
+router.get('/agent/:agentId', protect, authorize('ADMIN', 'MANAGER', 'AGENT'), getSocialMediaByAgent);
 
 export default router;

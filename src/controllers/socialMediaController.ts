@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { searchSocialMedia } from '../services/socialMediaSearchService';
+import { searchSocialMedia, getSocialMediaByAgentId } from '../services/socialMediaSearchService';
 
 export const searchProfiles = async (req: Request, res: Response) => {
     try {
@@ -25,6 +25,26 @@ export const searchProfiles = async (req: Request, res: Response) => {
         res.status(500).json({
             success: false,
             message: error.message || 'Server error during social media search'
+        });
+    }
+};
+
+export const getSocialMediaByAgent = async (req: Request, res: Response) => {
+    try {
+        const agentId = req.params.agentId;
+        const profiles = await getSocialMediaByAgentId(agentId);
+
+        res.status(200).json({
+            success: true,
+            count: profiles.length,
+            data: profiles
+        });
+
+    } catch (error: any) {
+        console.error('Controller Error:', error);
+        res.status(500).json({
+            success: false,
+            message: error.message || 'Server error fetching social media profiles'
         });
     }
 };

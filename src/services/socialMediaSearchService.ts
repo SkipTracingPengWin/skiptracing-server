@@ -144,3 +144,69 @@ export const searchSocialMedia = async (
         throw new Error(`Social media search failed: ${error.message}`);
     }
 };
+
+/**
+ * Get all social media profiles for borrowers assigned to a specific agent
+ */
+export const getSocialMediaByAgentId = async (agentId: string) => {
+    try {
+        // First verify the agent exists and get agent details
+        const agent = await prisma.agent.findUnique({
+            where: { id: agentId },
+            include: {
+                user: {
+                    select: { name: true, email: true },
+                },
+            },
+        });
+
+        if (!agent) {
+            throw new Error('Agent not found');
+        }
+
+        // Get all borrowers assigned to this agent with their social media profiles
+        const borrowersWithSocial = await prisma.borrower.findMany({
+            where: {
+                assignments: {
+                    some: {
+                        agentId: agentId,
+                    },
+                },
+            },
+            include: {
+                socialProfiles: true,
+                assignments: {
+                    where: {
+                        agentId: agentId,
+                    },
+                },
+            },
+        });
+
+        // Flatten the results to return all social media profiles with borrower and agent info
+        const socialMediaProfiles = borrowersWithSocial.flatMap((borrower) =>
+            borrower.socialProfiles.map((profile) => ({
+                ...profile,
+                borrower: {
+                    id: borrower.id,
+                    name: borrower.name,
+                    email: borrower.email,
+                    phone: borrower.phone,
+                    address: borrower.address,
+                },
+                agent: {
+                    id: agent.id,
+                    name: agent.name,
+                    email: agent.email,
+                    userName: agent.user.name,
+                },
+            }))
+        );
+
+        return socialMediaProfiles;
+
+    } catch (error: any) {
+        console.error('Error in getSocialMediaByAgentId:', error.message);
+        throw new Error(`Failed to fetch social media profiles: ${error.message}`);
+    }
+};
