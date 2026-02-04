@@ -6,6 +6,7 @@ import {
   createAssignmentService,
   updateAssignmentService,
   deleteAssignmentService,
+  getAssignmentsByAgentIdService,
 } from "../services/assignment.service";
 
 export const getAssignments = async (req: Request, res: Response) => {
@@ -56,5 +57,24 @@ export const deleteAssignment = async (req: Request, res: Response) => {
     res.json({ message: "Assignment removed" });
   } catch (error) {
     res.status(404).json({ message: "Assignment not found" });
+  }
+};
+
+export const getAssignmentsByAgentId = async (req: Request, res: Response) => {
+  try {
+    const agentId = req.params.agentId;
+    const assignments = await getAssignmentsByAgentIdService(agentId);
+
+    res.json({
+      success: true,
+      count: assignments.length,
+      data: assignments,
+    });
+  } catch (error) {
+    console.error("Error in getAssignmentsByAgentId:", error);
+    res.status(500).json({
+      success: false,
+      message: error instanceof Error ? error.message : "Server error",
+    });
   }
 };

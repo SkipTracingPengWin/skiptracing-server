@@ -5,6 +5,7 @@ import {
     createAssignment,
     updateAssignment,
     deleteAssignment,
+    getAssignmentsByAgentId,
 } from '../controllers/assignmentController';
 import { protect, authorize } from '../middleware/authMiddleware';
 
@@ -20,5 +21,9 @@ router
     .get(protect, getAssignmentById)
     .put(protect, updateAssignment)
     .delete(protect, authorize('ADMIN', 'MANAGER'), deleteAssignment);
+
+router
+    .route('/agent/:agentId')
+    .get(protect, authorize('ADMIN', 'MANAGER', 'AGENT'), getAssignmentsByAgentId);
 
 export default router;

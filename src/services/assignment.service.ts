@@ -184,3 +184,41 @@ export const deleteAssignmentService = async (id: string, user?: any) => {
 
   return deletedAssignment;
 };
+
+export const getAssignmentsByAgentIdService = async (agentId: string) => {
+  // First verify the agent exists
+  const agent = await prisma.agent.findUnique({
+    where: { id: agentId },
+  });
+
+  if (!agent) {
+    throw new Error("Agent not found");
+  }
+
+  // Get all assignments for this agent with full borrower details
+  const assignments = await prisma.assignment.findMany({
+    where: { agentId },
+    include: {
+      borrower: {
+        include: {
+          socialProfiles: true,
+          verifications: true,
+          recoveryActions: true,
+          locations: true,
+        },
+      },
+      agent: {
+        include: {
+          user: {
+            select: { name: true, email: true },
+          },
+        },
+      },
+    },
+    orderBy: {
+      assignedAt: 'desc',
+    },
+  });
+
+  return assignments;
+};
